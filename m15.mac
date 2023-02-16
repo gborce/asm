@@ -1,0 +1,99 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       ASM MACROS V15                                               ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	extern getchar
+	extern putchar
+	extern printf
+	extern scanf
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Code for start and end of program                        ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	start	0
+	push	EBP
+	mov	EBP, ESP
+	push	EBX
+	push	ESI
+	push	EDI
+%endmacro
+
+%macro	done	0
+	pop	EDI
+	pop	ESI
+	pop	EBX
+	mov	ESP, EBP
+	pop	EBP
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Input and output                                         ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	get_ch	1
+	call	getchar
+	mov	%1, AL
+%endmacro
+
+%macro	get_i	1
+	lea	EAX, %1
+	push	EAX
+	lea	EAX, [format_int]
+	push	EAX
+	call	scanf
+	add	ESP, 8
+%endmacro
+[SECTION .data]
+format_int:	db	"%d", 0
+
+%macro	get_hex	1
+	lea	EAX, %1
+	push	EAX
+	lea	EAX, [format_hex]
+	push	EAX
+	call	scanf
+	add	ESP, 8
+%endmacro
+[SECTION .data]
+format_hex:	db	"%x", 0
+
+%macro	put_ch	1
+	mov	EAX, 0
+	mov	AL, %1
+	push	EAX
+	call	putchar
+	add	ESP, 4
+%endmacro
+
+%macro	put_str	1
+	lea	EAX, %1
+	push	EAX
+	lea	EAX, [format_str]
+	push	EAX
+	call	printf
+	add	ESP, 8
+%endmacro
+[SECTION .data]
+format_str:	db	"%s", 0
+
+%macro	put_i	1
+	push	dword %1
+	lea	EAX, [format_int]
+	push	EAX
+	call	printf
+	add	ESP, 8
+%endmacro
+
+%macro	put_hex	1
+	push	dword %1
+	lea	EAX, [format_hex]
+	push	EAX
+	call	printf
+	add	ESP, 8
+%endmacro
