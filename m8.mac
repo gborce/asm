@@ -1,0 +1,293 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       ASM MACROS V8                                               ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	extern getchar
+	extern putchar
+	extern printf
+	extern scanf
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Code for start and end of program                        ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	start	0
+	push	EBP
+	mov	EBP, ESP
+	push	EBX
+	push	ESI
+	push	EDI
+%endmacro
+
+%macro	done	0
+	pop	EDI
+	pop	ESI
+	pop	EBX
+	mov	ESP, EBP
+	pop	EBP
+	ret
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Input and output                                         ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	get_ch	1
+	call	getchar
+	mov	%1, AL
+%endmacro
+
+%macro	get_i	1
+	lea	EBX, %1
+	push	EBX
+	lea	EAX, [format_int]
+	push	EAX
+	call	scanf
+	add	ESP, 8
+%endmacro
+[SECTION .data]
+format_int:	db	"%d", 0
+
+%macro	get_hex	1
+	lea	EBX, %1
+	push	EBX
+	lea	EAX, [format_hex]
+	push	EAX
+	call	scanf
+	add	ESP, 8
+%endmacro
+[SECTION .data]
+format_hex:	db	"%x", 0
+
+%macro	put_ch	1
+	mov	EBX, 0
+	mov	BL, %1
+	push	EBX
+	call	putchar
+	add	ESP, 4
+%endmacro
+
+%macro	put_str	1
+	lea	EBX, %1
+	push	EBX
+	lea	EAX, [format_str]
+	push	EAX
+	call	printf
+	add	ESP, 8
+%endmacro
+[SECTION .data]
+format_str:	db	"%s", 0
+
+%macro	put_i	1
+	push	dword %1
+	lea	EAX, [format_int]
+	push	EAX
+	call	printf
+	add	ESP, 8
+%endmacro
+
+%macro	put_hex	1
+	push	dword %1
+	lea	EAX, [format_hex]
+	push	EAX
+	call	printf
+	add	ESP, 8
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Integer arithmetic                                       ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	iadd	2
+	mov	EBX, %2
+	lea	EAX, %1
+	add	[EAX], EBX
+%endmacro
+
+%macro	isub	2
+	mov	EBX, %2
+	lea	EAX, %1
+	sub	[EAX], EBX
+%endmacro
+
+%macro	ineg	1
+	neg	dword %1
+%endmacro
+
+%macro	imult	2
+	mov	EBX, %2
+	lea	EAX, %1
+	mov	EDX, [EAX]
+	imul	EDX, EBX
+	mov	[EAX], EDX
+%endmacro
+
+%macro	idivi	2
+	mov	EBX, %2
+	lea	ECX, %1
+	mov	EAX, %1
+	cdq
+	idiv	EBX
+	mov	[ECX], EAX
+%endmacro
+
+%macro	irem	2
+	mov	EBX, %2
+	lea	ECX, %1
+	mov	EAX, %1
+	cdq
+	idiv	EBX
+	mov	[ECX], EDX
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Logical operations                                       ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	lnot	1
+	not	dword %1
+%endmacro
+
+%macro	land	2
+	mov	EBX, %2
+	lea	EAX, %1
+	and	[EAX], EBX
+%endmacro
+
+%macro	lor	2
+	mov	EBX, %2
+	lea	EAX, %1
+	or	[EAX], EBX
+%endmacro
+
+%macro	lxor	2
+	mov	EBX, %2
+	lea	EAX, %1
+	xor	[EAX], EBX
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Shift and rotation operations                            ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	rash	1
+	sar	dword %1, 1
+%endmacro
+
+%macro	rlsh	1
+	shr	dword %1, 1
+%endmacro
+
+%macro	llsh	1
+	shl	dword %1, 1
+%endmacro
+
+%macro	rrot	1
+	ror	dword %1, 1
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Comparison instructions                                  ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	compare	2
+	mov	EBX, %2
+	mov	EAX, %1
+	cmp	EAX, EBX
+%endmacro
+
+%macro	compareb	2
+	mov	BL, %2
+	mov	AL, %1
+	cmp	AL, BL
+%endmacro
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Branch instructions                                      ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; Miller's branching macros are not implemented here.  Instead
+; the Intel jump instructions can be used directly:
+
+;	jmp		Unconditional jump
+;	je		Jump if equal
+;	jne		Jump if not equal
+;	jg		Jump if greater
+;	jge		Jump if greater than or equal to
+;	jl		Jump if less
+;	jle		Jump if less than or equal to
+;	ja		Jump if above (unsigned)
+;	jae		Jump if above or equal (unsigned)
+;	jb		Jump if below (unsigned)
+;	jbe		Jump if below or equal (unsigned)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;                                                                 ;
+;        Move operations                                          ;
+;                                                                 ;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+%macro	la	2
+	lea	EBX, %2
+	mov	%1, EBX
+%endmacro
+
+%macro	move	2
+	mov	EBX, %2
+	lea	EAX, %1
+	mov	[EAX], EBX
+%endmacro
+
+%macro	moveb	2
+	mov	BL, %2
+	lea	EAX, %1
+	mov	[EAX], BL
+%endmacro
+
+%macro	movezx	2
+	movzx	EBX, byte %2
+	mov	%1, EBX
+%endmacro
+
+%macro	movesx	2
+	movsx	EBX, byte %2
+	mov	%1, EBX
+%endmacro
+
+%macro	loaddw	2
+	mov	EAX, %2
+	mov	EBX, [EAX]
+	mov	%1, EBX
+%endmacro
+
+%macro	loadb	2
+	mov	EAX, %2
+	mov	BL, [EAX]
+	mov	%1, BL
+%endmacro
+
+%macro	storedw	2
+	mov	EBX, %2
+	mov	EAX, %1
+	mov	[EAX], EBX
+%endmacro
+
+%macro	storeb	2
+	mov	BL, %2
+	mov	EAX, %1
+	mov	[EAX], BL
+%endmacro
