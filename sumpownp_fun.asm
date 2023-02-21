@@ -1,4 +1,4 @@
-;;; (c) Borce Gjorgjievski
+;;; (c) Bruce Gjorgjievski
 ;;; calculates sum of numbers from 1 to n, all to power p, returns pointer
 ;;; uses assembly function call
 
